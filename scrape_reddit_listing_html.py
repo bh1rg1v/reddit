@@ -412,6 +412,12 @@ async def scrape_subreddit(
 
     url = build_listing_url(subreddit)
 
+    subreddit_dir = output_dir / subreddit
+    subreddit_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     page = await context.new_page()
 
     try:
@@ -445,12 +451,12 @@ async def scrape_subreddit(
         html = await page.content()
 
         html_path = (
-            output_dir
+            subreddit_dir
             / f"{subreddit}_rendered.html"
         )
 
         links_path = (
-            output_dir
+            subreddit_dir
             / f"{subreddit}_post_links.txt"
         )
 
