@@ -19,11 +19,23 @@ import urllib.parse
 from html.parser import HTMLParser
 from typing import Any
 
+top_100_subreddits = [
+    "AskReddit", "funny", "gaming", "worldnews", "todayilearned", "aww", "Music", "movies", "science", "pics",
+    "Showerthoughts", "news", "Jokes", "mildlyinteresting", "explainlikeimfive", "videos", "books", "LifeProTips", "DIY", "sports",
+    "food", "gadgets", "EarthPorn", "space", "nottheonion", "dataisbeautiful", "history", "Futurology", "technology", "OldSchoolCool",
+    "UpliftingNews", "WritingPrompts", "television", "GetMotivated", "Documentaries", "personalfinance", "memes", "Art", "photography", "InternetIsBeautiful",
+    "philosophy", "nosleep", "interestingasfuck", "politics", "travel", "Fitness", "anime", "programming", "pcmasterrace", "askscience",
+    "cars", "wallstreetbets", "nba", "soccer", "formula1", "cricket", "europe", "natureismetal", "nextfuckinglevel", "wholesomememes",
+    "oddlysatisfying", "facepalm", "antiwork", "leagueoflegends", "Minecraft", "buildapc", "machinelearning", "artificial", "ChatGPT", "datascience",
+    "learnprogramming", "Python", "stocks", "investing", "cryptocurrency", "entrepreneur", "startups", "marketing", "sales", "business",
+    "webdev", "cscareerquestions", "sysadmin", "linux", "technologynews", "economics", "math", "physics", "chemistry", "biology",
+    "medicine", "engineering", "India", "indiasocial", "unitedstatesofindia", "BollyBlindsNGossip", "developersIndia", "GATEtard", "competitiveprogramming", "leetcode"
+]
 
 # PROJECT_ROOT = pathlib.Path("D:/github/reddit")
 PROJECT_ROOT = pathlib.Path.cwd()
 
-SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading"]
+SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading"] + top_100_subreddits
 
 DEFAULT_SORT = "new"
 
