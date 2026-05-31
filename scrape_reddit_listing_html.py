@@ -591,7 +591,11 @@ async def main_async():
     async with async_playwright() as p:
 
         browser = await p.chromium.launch(
-            headless=args.headless
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+            ],
         )
 
         context = await browser.new_context(
