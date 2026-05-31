@@ -22,7 +22,7 @@ from typing import Any
 
 PROJECT_ROOT = pathlib.Path("D:/github/reddit")
 
-SUBREDDITS = ["IndianStockMarket",]
+SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading"]
 
 DEFAULT_SORT = "new"
 
