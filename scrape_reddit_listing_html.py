@@ -20,7 +20,8 @@ from html.parser import HTMLParser
 from typing import Any
 
 
-PROJECT_ROOT = pathlib.Path("D:/github/reddit")
+# PROJECT_ROOT = pathlib.Path("D:/github/reddit")
+PROJECT_ROOT = pathlib.Path.cwd()
 
 SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading"]
 
