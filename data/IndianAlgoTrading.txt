@@ -1,0 +1,39 @@
+Subreddit: r/IndianAlgoTrading
+Fetched at UTC: 2026-05-30T19:08:44.115121+00:00
+Source: old.reddit.com HTML scrape
+Post sort: new
+Comment sort: confidence
+Posts fetched: 2
+
+====================================================================================================
+Title: Hi there traders
+ID: 15465s1
+Author: u/moddedberg2
+Subreddit: r/IndianAlgoTrading
+Score: 1
+Comments reported by Reddit: 0
+Permalink: https://old.reddit.com/r/IndianAlgoTrading/comments/15465s1/hi_there_traders/
+URL: /r/IndianAlgoTrading/comments/15465s1/hi_there_traders/
+
+Post body:
+This is a subreddit for Indian Algo Trading.
+
+Comments:
+[No comments]
+
+====================================================================================================
+Title: r/IndianAlgoTrading Lounge
+ID: 154659i
+Author: u/moddedberg2
+Subreddit: r/IndianAlgoTrading
+Score: 1
+Comments reported by Reddit: 0
+Permalink: https://old.reddit.com/r/IndianAlgoTrading/comments/154659i/rindianalgotrading_lounge/
+URL: /r/IndianAlgoTrading/comments/154659i/rindianalgotrading_lounge/
+
+Post body:
+A place for members of to chat with each otherr/IndianAlgoTrading
+
+Comments:
+[No comments]
+
