@@ -35,7 +35,8 @@ top_100_subreddits = [
 # PROJECT_ROOT = pathlib.Path("D:/github/reddit")
 PROJECT_ROOT = pathlib.Path.cwd()
 
-SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading"] + top_100_subreddits
+# SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading"] + top_100_subreddits
+SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading", "wallstreetbets"]
 
 DEFAULT_SORT = "new"
 

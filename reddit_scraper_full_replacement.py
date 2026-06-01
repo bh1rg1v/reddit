@@ -10,19 +10,22 @@ import pathlib
 import re
 import urllib.parse
 from typing import Any
+from collections import defaultdict
 
 PROJECT_ROOT = pathlib.Path("D:/github/reddit")
 
-SUBREDDITS = ["IndianStockMarket"]
+SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading", "wallstreetbets", "stocks", "investing", "NSEbets"]
 SORTS = ["new", "best", "hot", "rising", "top"]
 
 DEFAULT_OUTPUT_DIR = str(PROJECT_ROOT / "data")
 POST_LINKS_DIR = "post_links"
 
-DEFAULT_MAX_SCROLLS = 10_000_000_000
+DEFAULT_MAX_SCROLLS = 250
 DEFAULT_DELAY_MS = 2000
 DEFAULT_BREAK_EVERY_SCROLLS = 1000
 DEFAULT_BREAK_SECONDS = 120
+
+time_taken = defaultdict(float)
 
 CSV_FIELDS = [
     "subreddit",
@@ -32,6 +35,132 @@ CSV_FIELDS = [
     "created_timestamp",
     "fetched_at_utc",
 ]
+
+LAST_FETCHED_CSV = (
+    PROJECT_ROOT
+    / "data"
+    / "last_fetched.csv"
+)
+
+LAST_FETCHED_FIELDS = [
+    "subreddit",
+    "last_fetched_utc",
+    "time_taken_seconds",
+]
+
+def subreddit_exists_in_last_fetched(
+    subreddit,
+):
+
+    data = load_last_fetched()
+
+    return subreddit in data
+
+def load_last_fetched():
+
+    data = {}
+
+    if not LAST_FETCHED_CSV.exists():
+        return data
+
+    with LAST_FETCHED_CSV.open(
+        "r",
+        encoding="utf-8",
+        newline=""
+    ) as f:
+
+        reader = csv.DictReader(f)
+
+        for row in reader:
+
+            data[row["subreddit"]] = {
+                "last_fetched_utc":
+                    row["last_fetched_utc"],
+                "time_taken_seconds":
+                    float(
+                        row["time_taken_seconds"]
+                    ),
+            }
+
+    return data
+
+def save_last_fetched(data):
+
+    LAST_FETCHED_CSV.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with LAST_FETCHED_CSV.open(
+        "w",
+        encoding="utf-8",
+        newline=""
+    ) as f:
+
+        writer = csv.DictWriter(
+            f,
+            fieldnames=LAST_FETCHED_FIELDS,
+        )
+
+        writer.writeheader()
+
+        for subreddit, info in data.items():
+
+            writer.writerow(
+                {
+                    "subreddit": subreddit,
+                    "last_fetched_utc":
+                        info["last_fetched_utc"],
+                    "time_taken_seconds":
+                        info["time_taken_seconds"],
+                }
+            )
+
+def should_scrape_subreddit(
+    subreddit,
+    hours=3,
+):
+
+    data = load_last_fetched()
+
+    if subreddit not in data:
+        return True
+
+    last_fetched = dt.datetime.fromisoformat(
+        data[subreddit][
+            "last_fetched_utc"
+        ]
+    )
+
+    elapsed = (
+        dt.datetime.now(
+            dt.timezone.utc
+        )
+        - last_fetched
+    ).total_seconds()
+
+    return elapsed >= hours * 3600
+
+def update_last_fetched(
+    subreddit,
+    time_taken_seconds,
+):
+
+    data = load_last_fetched()
+
+    data[subreddit] = {
+        "last_fetched_utc":
+            dt.datetime.now(
+                dt.timezone.utc
+            ).isoformat(),
+        "time_taken_seconds":
+            round(
+                time_taken_seconds,
+                2,
+            ),
+    }
+
+    save_last_fetched(data)
 
 
 def build_listing_url(subreddit: str, sort: str) -> str:
@@ -228,7 +357,6 @@ async def scroll_page(
 
     return list(discovered.values())
 
-
 async def scrape_sort(
     context,
     subreddit,
@@ -236,6 +364,8 @@ async def scrape_sort(
     csv_path,
     args,
 ):
+    
+    start_time = dt.datetime.now()
 
     url = build_listing_url(
         subreddit,
@@ -320,6 +450,10 @@ async def scrape_sort(
     finally:
         await page.close()
 
+        end_time = dt.datetime.now()
+        duration = (end_time - start_time).total_seconds()
+
+        time_taken[subreddit] += duration
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -390,20 +524,65 @@ async def main_async():
 
             for subreddit in SUBREDDITS:
 
-                for sort in SORTS:
+                if not should_scrape_subreddit(subreddit):
+
+                    print(
+                        f"Skipping r/{subreddit}. "
+                        f"Fetched within last 3 hours."
+                    )
+
+                    continue
+
+                time_taken[subreddit] = 0
+
+                sorts_to_scrape = (
+                    ["new"]
+                    if subreddit_exists_in_last_fetched(
+                        subreddit
+                    )
+                    else SORTS
+                )
+
+                for sort in sorts_to_scrape:
 
                     csv_path = (
                         csv_dir
+                        / subreddit
                         / f"{subreddit}_{sort}.csv"
                     )
 
-                    await scrape_sort(
-                        context=context,
-                        subreddit=subreddit,
-                        sort=sort,
-                        csv_path=csv_path,
-                        args=args,
+                    csv_path.parent.mkdir(
+                        parents=True,
+                        exist_ok=True,
                     )
+
+                    try:
+
+                        await scrape_sort(
+                            context=context,
+                            subreddit=subreddit,
+                            sort=sort,
+                            csv_path=csv_path,
+                            args=args,
+                        )
+
+                    except Exception as e:
+
+                        print(
+                            f"Error scraping r/{subreddit} "
+                            f"[{sort}]: {e}"
+                        )
+
+                update_last_fetched(
+                    subreddit=subreddit,
+                    time_taken_seconds=time_taken[subreddit],
+                )
+
+            for subreddit, duration in time_taken.items():
+                print(
+                    f"Total time taken for r/{subreddit}: "
+                    f"{duration:.2f} seconds"
+                )
 
         finally:
 
