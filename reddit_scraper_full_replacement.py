@@ -13,6 +13,7 @@ from typing import Any
 from collections import defaultdict
 
 PROJECT_ROOT = pathlib.Path("D:/github/reddit")
+PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
 
 SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading", "wallstreetbets", "stocks", "investing", "NSEbets"]
 SORTS = ["new", "best", "hot", "rising", "top"]
@@ -391,6 +392,13 @@ async def scrape_sort(
             wait_until="domcontentloaded",
             timeout=60000,
         )
+
+        await page.screenshot(path="debug.png")
+
+        html = await page.content()
+
+        with open("debug.html", "w", encoding="utf-8") as f:
+            f.write(html)
 
         await page.wait_for_timeout(
             args.delay_ms
