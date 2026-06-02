@@ -15,7 +15,21 @@ from collections import defaultdict
 PROJECT_ROOT = pathlib.Path("D:/github/reddit")
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
 
-SUBREDDITS = ["IndianStockMarket", "IndianAlgoTrading", "wallstreetbets", "stocks", "investing", "NSEbets"]
+top_100_subreddits = [
+    "AskReddit", "funny", "gaming", "worldnews", "todayilearned", "aww", "Music", "movies", "science", "pics",
+    "Showerthoughts", "news", "Jokes", "mildlyinteresting", "explainlikeimfive", "videos", "books", "LifeProTips", "DIY", "sports",
+    "food", "gadgets", "EarthPorn", "space", "nottheonion", "dataisbeautiful", "history", "Futurology", "technology", "OldSchoolCool",
+    "UpliftingNews", "WritingPrompts", "television", "GetMotivated", "Documentaries", "personalfinance", "memes", "Art", "photography", "InternetIsBeautiful",
+    "philosophy", "nosleep", "interestingasfuck", "politics", "travel", "Fitness", "anime", "programming", "pcmasterrace", "askscience",
+    "cars", "wallstreetbets", "nba", "soccer", "formula1", "cricket", "europe", "natureismetal", "nextfuckinglevel", "wholesomememes",
+    "oddlysatisfying", "facepalm", "antiwork", "leagueoflegends", "Minecraft", "buildapc", "machinelearning", "artificial", "ChatGPT", "datascience",
+    "learnprogramming", "Python", "stocks", "investing", "cryptocurrency", "entrepreneur", "startups", "marketing", "sales", "business",
+    "webdev", "cscareerquestions", "sysadmin", "linux", "technologynews", "economics", "math", "physics", "chemistry", "biology",
+    "medicine", "engineering", "India", "indiasocial", "unitedstatesofindia", "BollyBlindsNGossip", "developersIndia", "GATEtard", "competitiveprogramming", "leetcode"
+]
+
+SUBREDDITS = ["IndianStockMarket", "IndiaAlgoTrading", "wallstreetbets", "stocks", "investing", "NSEbets"] + top_100_subreddits
+SUBREDDITS = list(set(SUBREDDITS))
 SORTS = ["new", "best", "hot", "rising", "top"]
 
 DEFAULT_OUTPUT_DIR = str(PROJECT_ROOT / "data")
@@ -25,6 +39,8 @@ DEFAULT_MAX_SCROLLS = 250
 DEFAULT_DELAY_MS = 2000
 DEFAULT_BREAK_EVERY_SCROLLS = 1000
 DEFAULT_BREAK_SECONDS = 120
+
+DEFAULT_CONCURRENT_TABS = 3
 
 time_taken = defaultdict(float)
 
@@ -119,7 +135,7 @@ def save_last_fetched(data):
 
 def should_scrape_subreddit(
     subreddit,
-    hours=3,
+    hours=0,
 ):
 
     data = load_last_fetched()
@@ -326,14 +342,14 @@ async def scroll_page(
             consecutive_no_new_links = 0
 
 
-        if consecutive_existing_only >= 10:
+        if consecutive_existing_only >= 5:
             print(
                 "Stopping. Reached historical region."
             )
             break
 
 
-        if consecutive_no_new_links >= 10:
+        if consecutive_no_new_links >= 5:
             print(
                 "Stopping. No new links found "
                 "for 10 consecutive scrolls."
@@ -471,6 +487,11 @@ def parse_args():
         default=DEFAULT_OUTPUT_DIR,
     )
     parser.add_argument(
+        "--concurrent-tabs",
+        type=int,
+        default=DEFAULT_CONCURRENT_TABS,
+    )
+    parser.add_argument(
         "--max-scrolls",
         type=int,
         default=DEFAULT_MAX_SCROLLS,
@@ -497,10 +518,32 @@ def parse_args():
 
     return parser.parse_args()
 
+async def scrape_sort_limited(
+    semaphore,
+    context,
+    subreddit,
+    sort,
+    csv_path,
+    args,
+):
+    async with semaphore:
+
+        await scrape_sort(
+            context=context,
+            subreddit=subreddit,
+            sort=sort,
+            csv_path=csv_path,
+            args=args,
+        )
+
 
 async def main_async():
 
     args = parse_args()
+
+    semaphore = asyncio.Semaphore(
+        args.concurrent_tabs
+    )
 
     from playwright.async_api import (
         async_playwright,
